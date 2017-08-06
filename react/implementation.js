@@ -8,6 +8,19 @@ class Component {
   constructor(props) {
     this.props = props
   }
+
+  render() {
+  }
+
+  setState(state) {
+    const setter = () => {
+      for(let key in state)
+        this.state[key] = state[key]
+      const toRender = this.render()
+      ReactDOM.render(toRender, this.domParent, this.root)
+    }
+    setTimeout(setter, 0)
+  }
 }
 
 React.Component = Component
@@ -54,8 +67,13 @@ const ReactDOM = (() => {
     return parent
   }
 
-  const renderComponent = ({componentClass, attributes, children}, parent, root) =>
-    ReactDOM.render(new componentClass(attributes).render(), parent, root)
+  const renderComponent = ({componentClass, attributes, children}, parent, root) => {
+    const component     = new componentClass(attributes, parent, root)
+    const nextRoot      = ReactDOM.render(component.render(), parent, root)
+    component.domParent = parent
+    component.root      = nextRoot
+    return nextRoot
+  }
 
   const renderFunction = ({fn, attributes, children}, parent, root) =>
     ReactDOM.render(fn(attributes), parent, root)
