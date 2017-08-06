@@ -7,17 +7,13 @@ class React {
 class Component {
   constructor(props) {
     this.props = props
-    // debugger
-    // console.log('Component:', this)
-    // console.log('Component props', props)
   }
 }
 
+React.Component = Component
+
 
 React.createElement = function(toCreate, attrs, ...children) {
-  console.log('CHILDREN')
-  console.log(children)
-  // console.log('CREATING', toCreate, attrs, children)
   if(typeof toCreate === 'string') {
     return {
       type:       'virtualNode',
@@ -42,54 +38,71 @@ React.createElement = function(toCreate, attrs, ...children) {
   }
 }
 
-React.Component = Component
 
-const ReactDOM = {
-  render: (toRender, parent, root) => {
-    if(toRender === null) {
-      // nothing to render
-      return null
+const ReactDOM = (() => {
+  const renderNothing = (toRender, parent, root) =>
+    null
 
-    } else if(typeof toRender === 'string') {
-      // text
-      const element = document.createTextNode(toRender)
-      parent.appendChild(element)
-      return element
-
-    } else if(typeof toRender === 'object' && toRender.constructor === Array) {
-      // array
-      toRender.forEach(element => ReactDOM.render(element, parent, root))
-      return parent
-
-    } else if(toRender.type === 'component') {
-      const {componentClass, attributes, children} = toRender
-      // console.log('RENDERING component', componentClass, attributes, children)
-      const component = new componentClass(attributes)
-      const child     = component.render()
-      return ReactDOM.render(child, parent, root)
-
-    } else if(toRender.type === 'function') {
-      const {fn, attributes, children} = toRender
-      // console.log('RENDERING function', fn, attributes, children)
-      return ReactDOM.render(fn(attributes), parent, root)
-
-    } else if(toRender.type === 'virtualNode') {
-      const {nodeName, attributes, children} = toRender
-      // console.log('virtualNode', nodeName, attributes, children)
-      const element  = document.createElement(nodeName)
-      for(let attrName in attributes) {
-        if(attrName === 'className') {
-          element.classList.add(attributes[attrName])
-        } else {
-          element.setAttribute(attrName, attributes[attrName])
-        }
-      }
-      children.forEach(child => ReactDOM.render(child, element, 'FIXME'))
-      parent.appendChild(element)
-      return element
-    } else {
-      window.errObj = toRender
-      throw(`IDK HOW TO RENDER ${toRender}`)
-    }
+  const renderText = ({text}, parent, root) => {
+    const element = document.createTextNode(text)
+    parent.appendChild(element)
+    return element
   }
-}
+
+  const renderArray = ({array}, parent, root) => {
+    array.forEach(element => ReactDOM.render(element, parent, root))
+    return parent
+  }
+
+  const renderComponent = ({componentClass, attributes, children}, parent, root) =>
+    ReactDOM.render(new componentClass(attributes).render(), parent, root)
+
+  const renderFunction = ({fn, attributes, children}, parent, root) =>
+    ReactDOM.render(fn(attributes), parent, root)
+
+  const renderVirtualNode = ({nodeName, attributes, children}, parent, root) => {
+    const element  = document.createElement(nodeName)
+    for(let attrName in attributes)
+      if(attrName === 'className')
+        element.classList.add(attributes[attrName])
+      else
+        element.setAttribute(attrName, attributes[attrName])
+    children.forEach(child => ReactDOM.render(child, element, 'FIXME'))
+    parent.appendChild(element)
+    return element
+  }
+
+  const renderError = ({toRender}, parent, root) => {
+    window.errObj = toRender
+    throw(`IDK HOW TO RENDER ${toRender}`)
+  }
+
+  const normalize = (toRender, parent, root) => {
+    if(toRender === null)
+      return {type: 'nothing'}
+    if(typeof toRender === 'string')
+      return {type: 'text', text: toRender}
+    if(typeof toRender !== 'object')
+      return {type: 'error', toRender: toRender}
+    if(toRender.constructor === Array)
+      return {type: 'array', array: toRender}
+    if (toRender.type)
+      return toRender
+    return {type: 'error', toRender: toRender}
+  }
+
+  const render = (toRender, parent, root) => {
+    toRender = normalize(toRender)
+    return ({
+      'nothing':     renderNothing,
+      'text':        renderText,
+      'array':       renderArray,
+      'component':   renderComponent,
+      'function':    renderFunction,
+      'virtualNode': renderVirtualNode,
+      'default':     renderError,
+    })[toRender.type](toRender, parent, root)
+  }
+
+  return {render}
+})()
