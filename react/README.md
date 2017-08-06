@@ -1,9 +1,9 @@
 Implement React
 ===============
 
-Taken from [here](https://codepen.io/gaearon/pen/gWWZgR), suggested by Matt Larraz
-in response to [this](https://twitter.com/josh_cheek/status/894045555617345536)
-request.
+You can see how it should work by looking at how it runs when it uses React, [here](https://codepen.io/gaearon/pen/gWWZgR).
+Suggested by Matt Larraz in response to [this](https://twitter.com/josh_cheek/status/894045555617345536) request.
+Uses [Babel Standalone](https://github.com/babel/babel-standalone) to transform the JSX.
 
 To run:
 
