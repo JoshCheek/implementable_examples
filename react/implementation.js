@@ -65,6 +65,8 @@ const ReactDOM = (() => {
     for(let attrName in attributes)
       if(attrName === 'className')
         element.classList.add(attributes[attrName])
+      else if(attrName === 'onClick')
+        element.addEventListener('click', attributes[attrName], false)
       else
         element.setAttribute(attrName, attributes[attrName])
     children.forEach(child => ReactDOM.render(child, element, 'FIXME'))
