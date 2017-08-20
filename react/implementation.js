@@ -17,8 +17,6 @@ class Component {
       for(let key in state)
         this.state[key] = state[key]
       const toRender = this.render()
-      window.stateComponent = this
-      console.log(toRender)
       this.root = ReactDOM.render(toRender, this.domParent, this.root)
     }
     setTimeout(setter, 0)
@@ -28,7 +26,19 @@ class Component {
 React.Component = Component
 
 
+const flatten = function(toFlatten, flattened=[]) {
+  if(!toFlatten.length)
+    return flattened
+  const [element, ...rest] = toFlatten
+  if(element && element.constructor === Array)
+    flattened = flatten(element, flattened)
+  else
+    flattened = flattened.concat([element])
+  return flatten(rest, flattened)
+}
+
 React.createElement = function(toCreate, attrs, ...children) {
+  children = flatten(children)
   if(typeof toCreate === 'string') {
     return {
       type:       'virtualNode',
@@ -59,7 +69,6 @@ const ReactDOM = (() => {
     null
 
   const renderText = ({text}, parent, root) => {
-    console.log(root)
     let element
     if(root) {
       element = root
@@ -69,12 +78,6 @@ const ReactDOM = (() => {
       parent.appendChild(element)
     }
     return element
-  }
-
-  const renderArray = ({array}, parent, root) => {
-    const childNodes = parent.childNodes
-    array.forEach((child, i) => ReactDOM.render(child, parent, childNodes[i]))
-    return parent
   }
 
   const renderComponent = ({componentClass, attributes, children}, parent, root) => {
@@ -102,7 +105,14 @@ const ReactDOM = (() => {
           element.setAttribute(attrName, attributes[attrName])
       const childNodes = element.childNodes
       children.forEach((child, i) => ReactDOM.render(child, element, childNodes[i]))
-      // FIXME: then delete extras
+      if(nodeName === 'ol') {
+        console.log(childNodes, children)
+      }
+      for(let i = children.length; i < childNodes.length; ++i) {
+        const child = childNodes[i]
+        console.log("removing", i, child)
+        child.parentElement.removeChild(child)
+      }
     } else {
       element = document.createElement(nodeName)
       for(let attrName in attributes)
@@ -142,7 +152,6 @@ const ReactDOM = (() => {
     return ({
       'nothing':     renderNothing,
       'text':        renderText,
-      'array':       renderArray,
       'component':   renderComponent,
       'function':    renderFunction,
       'virtualNode': renderVirtualNode,
