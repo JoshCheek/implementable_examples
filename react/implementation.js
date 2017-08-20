@@ -17,7 +17,9 @@ class Component {
       for(let key in state)
         this.state[key] = state[key]
       const toRender = this.render()
-      ReactDOM.render(toRender, this.domParent, this.root)
+      window.stateComponent = this
+      console.log(toRender)
+      this.root = ReactDOM.render(toRender, this.domParent, this.root)
     }
     setTimeout(setter, 0)
   }
@@ -57,13 +59,21 @@ const ReactDOM = (() => {
     null
 
   const renderText = ({text}, parent, root) => {
-    const element = document.createTextNode(text)
-    parent.appendChild(element)
+    console.log(root)
+    let element
+    if(root) {
+      element = root
+      element.nodeValue = text
+    } else {
+      element = document.createTextNode(text)
+      parent.appendChild(element)
+    }
     return element
   }
 
   const renderArray = ({array}, parent, root) => {
-    array.forEach(element => ReactDOM.render(element, parent, root))
+    const childNodes = parent.childNodes
+    array.forEach((child, i) => ReactDOM.render(child, parent, childNodes[i]))
     return parent
   }
 
@@ -79,16 +89,32 @@ const ReactDOM = (() => {
     ReactDOM.render(fn(attributes), parent, root)
 
   const renderVirtualNode = ({nodeName, attributes, children}, parent, root) => {
-    const element  = document.createElement(nodeName)
-    for(let attrName in attributes)
-      if(attrName === 'className')
-        element.classList.add(attributes[attrName])
-      else if(attrName === 'onClick')
-        element.addEventListener('click', attributes[attrName], false)
-      else
-        element.setAttribute(attrName, attributes[attrName])
-    children.forEach(child => ReactDOM.render(child, element, 'FIXME'))
-    parent.appendChild(element)
+    // console.log(`children of ${nodeName}`, children)
+    let element
+    if(root) {
+      element = root
+      for(let attrName in attributes)
+        if(attrName === 'className')
+          element.classList.add(attributes[attrName])
+        else if(attrName === 'onClick')
+          null // FIXME: This only works for our specific example (I hope :P)
+        else
+          element.setAttribute(attrName, attributes[attrName])
+      const childNodes = element.childNodes
+      children.forEach((child, i) => ReactDOM.render(child, element, childNodes[i]))
+      // FIXME: then delete extras
+    } else {
+      element = document.createElement(nodeName)
+      for(let attrName in attributes)
+        if(attrName === 'className')
+          element.classList.add(attributes[attrName])
+        else if(attrName === 'onClick')
+          element.addEventListener('click', attributes[attrName], false)
+        else
+          element.setAttribute(attrName, attributes[attrName])
+      children.forEach(child => ReactDOM.render(child, element, null))
+      parent.appendChild(element)
+    }
     return element
   }
 
