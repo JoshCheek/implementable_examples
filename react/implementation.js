@@ -65,8 +65,11 @@ React.createElement = function(toCreate, attrs, ...children) {
 
 
 const ReactDOM = (() => {
-  const renderNothing = (toRender, parent, root) =>
-    null
+  const renderNothing = (toRender, parent, root) => {
+    if(root)
+      root.parentElement.removeChild(root)
+    return null
+  }
 
   const renderText = ({text}, parent, root) => {
     let element
@@ -92,7 +95,6 @@ const ReactDOM = (() => {
     ReactDOM.render(fn(attributes), parent, root)
 
   const renderVirtualNode = ({nodeName, attributes, children}, parent, root) => {
-    // console.log(`children of ${nodeName}`, children)
     let element
     if(root) {
       element = root
@@ -105,14 +107,10 @@ const ReactDOM = (() => {
           element.setAttribute(attrName, attributes[attrName])
       const childNodes = element.childNodes
       children.forEach((child, i) => ReactDOM.render(child, element, childNodes[i]))
-      if(nodeName === 'ol') {
-        console.log(childNodes, children)
-      }
-      for(let i = children.length; i < childNodes.length; ++i) {
-        const child = childNodes[i]
-        console.log("removing", i, child)
-        child.parentElement.removeChild(child)
-      }
+      // for(let i = children.length; i < childNodes.length; ++i) {
+      //   const child = childNodes[i]
+      //   child.parentElement.removeChild(child)
+      // }
     } else {
       element = document.createElement(nodeName)
       for(let attrName in attributes)
