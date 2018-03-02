@@ -49,8 +49,14 @@ window.ReactDOM = {
     if(type === 'concrete') {
       const child = document.createElement(klass)
 
+      // console.log(props)
+
       if(props.className) {
         child.classList.add(props.className)
+      }
+
+      if(props.onClick) {
+        child.addEventListener('click', props.onClick);
       }
 
       if(grandChildren.length !== 0)
