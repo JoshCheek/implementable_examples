@@ -14,8 +14,15 @@ React.createElement = function(klass, props, ...children) {
 }
 
 React.Component = class Component {
-  constructor(props, context) {
-    this.props = props
+  constructor(props, context, updater) {
+    this.props   = props
+    this.context = context
+    this.updater = updater
+  }
+
+  setState(newState){
+    Object.assign(this.state, newState)
+    this.updater()
   }
 }
 
@@ -56,7 +63,11 @@ window.ReactDOM = {
       }
 
       if(props.onClick) {
-        child.addEventListener('click', props.onClick);
+        child.addEventListener('click', () => {
+          console.log("PROPS:", props.onClick.toString())
+          props.onClick();
+        });
+
       }
 
       if(grandChildren.length !== 0)
@@ -67,7 +78,10 @@ window.ReactDOM = {
     }
 
     if(isReactComponent(klass)) {
-      nextVirtualNode = new klass(props, {}).render()
+      function updater() {
+        ReactDOM.render(this.render(), parent)
+      }
+      nextVirtualNode = new klass(props, {}, updater).render()
       ReactDOM.render(nextVirtualNode, parent)
       return
     }
