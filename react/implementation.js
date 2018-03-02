@@ -36,17 +36,12 @@ window.ReactDOM = {
     if(!virtualNode)
       return
 
-    if (typeof virtualNode === 'string') {
-      const nextVirtualNode = document.createTextNode(virtualNode)
-      parent.appendChild(nextVirtualNode)
-      return
-    }
+    if (typeof virtualNode === 'string')
+      return parent.appendChild(document.createTextNode(virtualNode))
 
-    if (Array.isArray(virtualNode)) {
-      virtualNode.forEach(child =>
-        ReactDOM.render(child, parent))
-      return
-    }
+    if (Array.isArray(virtualNode))
+      return virtualNode.map(
+        child => ReactDOM.render(child, parent))
 
     let {type, klass, props, children} = virtualNode
     const grandChildren = children // ;)~
@@ -56,40 +51,36 @@ window.ReactDOM = {
     if(type === 'concrete') {
       const child = document.createElement(klass)
 
-      // console.log(props)
-
-      if(props.className) {
+      if(props.className)
         child.classList.add(props.className)
-      }
 
-      if(props.onClick) {
-        child.addEventListener('click', () => {
-          console.log("PROPS:", props.onClick.toString())
-          props.onClick();
-        });
-
-      }
+      if(props.onClick)
+        child.addEventListener('click', props.onClick);
 
       if(grandChildren.length !== 0)
         grandChildren.forEach(grandChild =>
           ReactDOM.render(grandChild, child))
       parent.appendChild(child)
-      return
+      return child
     }
 
     if(isReactComponent(klass)) {
+      let domNode
+
       function updater() {
-        ReactDOM.render(this.render(), parent)
+        const maybeNewVdom = this.render()
+        ReactDOM.render(maybeNewVdom, parent)
+        // const diff = getDiff(nextVirtualNode, maybeNewVdom)
+        // applyDiff(diff, domnode)
       }
       nextVirtualNode = new klass(props, {}, updater).render()
-      ReactDOM.render(nextVirtualNode, parent)
-      return
+      domNode = ReactDOM.render(nextVirtualNode, parent)
+      return domNode
     }
 
     if (typeof klass === 'function') {
       nextVirtualNode = klass(props);
-      ReactDOM.render(nextVirtualNode, parent)
-      return
+      return ReactDOM.render(nextVirtualNode, parent)
     }
 
     console.dir(virtualNode)
