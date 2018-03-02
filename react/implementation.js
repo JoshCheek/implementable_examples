@@ -41,12 +41,18 @@ window.ReactDOM = {
       return
     }
 
-    const {type, klass, props, children} = virtualNode
+    let {type, klass, props, children} = virtualNode
     const grandChildren = children // ;)~
+    props = props || {}
     let nextVirtualNode;
 
     if(type === 'concrete') {
       const child = document.createElement(klass)
+
+      if(props.className) {
+        child.classList.add(props.className)
+      }
+
       if(grandChildren.length !== 0)
         grandChildren.forEach(grandChild =>
           ReactDOM.render(grandChild, child))
