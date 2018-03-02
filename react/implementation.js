@@ -46,7 +46,6 @@ window.ReactDOM = {
     let {type, klass, props, children} = virtualNode
     const grandChildren = children // ;)~
     props = props || {}
-    let nextVirtualNode;
 
     if(type === 'concrete') {
       const child = document.createElement(klass)
@@ -57,6 +56,9 @@ window.ReactDOM = {
       if(props.onClick)
         child.addEventListener('click', props.onClick);
 
+      if(props.href)
+        child.setAttribute('href', props.href)
+
       if(grandChildren.length !== 0)
         grandChildren.forEach(grandChild =>
           ReactDOM.render(grandChild, child))
@@ -65,22 +67,21 @@ window.ReactDOM = {
     }
 
     if(isReactComponent(klass)) {
-      let domNode
+      let realDom, currentVdom
 
       function updater() {
-        const maybeNewVdom = this.render()
-        ReactDOM.render(maybeNewVdom, parent)
-        // const diff = getDiff(nextVirtualNode, maybeNewVdom)
-        // applyDiff(diff, domnode)
+        const newVdom = this.render()
+        ReactDOM.render(newVdom, parent)
+        // const diff = getDiff(currentVdom, newVdom)
+        // applyDiff(diff, realDom, parent)
       }
-      nextVirtualNode = new klass(props, {}, updater).render()
-      domNode = ReactDOM.render(nextVirtualNode, parent)
-      return domNode
+      currentVdom = new klass(props, {}, updater).render()
+      realDom = ReactDOM.render(currentVdom, parent)
+      return realDom
     }
 
     if (typeof klass === 'function') {
-      nextVirtualNode = klass(props);
-      return ReactDOM.render(nextVirtualNode, parent)
+      return ReactDOM.render(klass(props), parent)
     }
 
     console.dir(virtualNode)
